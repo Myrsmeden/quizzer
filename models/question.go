@@ -13,7 +13,7 @@ type Answer struct {
 }
 
 type Question struct {
-	Enquiry string   `json:"question"`
+	Enquiry string   `json:"text"`
 	Answers []Answer `json:"answers"`
 }
 

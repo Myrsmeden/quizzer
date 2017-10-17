@@ -19,30 +19,127 @@
         <!-- Vue.js -->
         <script src="http://cdnjs.cloudflare.com/ajax/libs/vue/1.0.24/vue.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-resource/0.7.0/vue-resource.min.js"></script>
+        <style type="text/css">
+            .question {
+                width: 80%;
+                background-color: #f2f2f2;
+                margin: 2em;
+                padding: 1em;
+                text-align: center;
+                box-sizing: border-box;
+            }
+            .answer {
+                width: 45%;
+                float:left;
+                box-sizing: border-box;
+                padding: 1em;
+                height: 10em;
+                border: 2px dashed #999;
+                margin: 2.5%;
+            }
+            .answer:hover {
+                background-color: #9b59b6;
+                color:#fff;
+            }
+
+            .answer.incorrect {
+                background-color: #c0392b;
+            }
+
+            .answer.correct {
+                background-color: #2ecc71;
+            }
+        </style>
     </head>
     <body>
         <div class="container">
             <div class="row">
-                <div class="col-md-4">
-                    <h2>My Tasks</h2>
-                    <ul class="list-group">
-                        <li class="list-group-item" v-for="task in tasks">
-                            {{ task.name }}
-                            <span class="pull-right">
-                                <button class="btn btn-xs btn-danger" v-on:click="deleteTask($index)">
-                                    <i class="fa fa-trash-o" aria-hidden="true"></i>
-                                </button>
-                            </span>
-                        </li>
-                    </ul>
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="New Task" v-on:keyup.enter="createTask" v-model="newTask.name">
-                        <span class="input-group-btn">
-                            <button class="btn btn-primary" type="button" v-on:click="createTask">Create</button>
-                        </span>
-                    </div><!-- /input-group -->
+                <div class="col-sm-12 question">
+                    <h1>{{question.text}}</h1>
+                    <div class="answer" v-for="alternative in question.answers" v-on:click="handleAnswer($index)" data-correct="{{alternative.correct}}" data-number="{{$index}}">
+                        {{alternative.text}}
+                    </div>
                 </div>
             </div>
         </div>
+        <script>
+            new Vue({
+                el: 'body',
+
+                data: {
+                    question: {}
+                },
+
+          // This is run whenever the page is loaded to make sure we have a current task list
+                created: function() {
+        // Use the vue-resource $http client to fetch data from the /tasks route
+                    this.$http.get('/question').then(function(response) {
+                        $('.answer').removeClass('correct');
+                        $('.answer').removeClass('incorrect');
+                        this.question = response.data ? response.data : []
+                    })
+                },
+
+                methods: {
+                    handleAnswer: function(index) {
+                        that = this;
+                        answer = this.question.answers[index];
+                        if (answer.correct) {
+                            $('.answer').each(function() {
+                                var attr = $(this).attr('data-correct');
+                                if ( typeof attr !== typeof undefined && attr !== false) {
+                                    $(this).addClass('correct');
+                                } else {
+                                    $(this).addClass('incorrect');
+                                }
+                            })
+                            setTimeout(function() {
+                                    that.$http.get('/question').then(function(response) {
+                                        $('.answer').removeClass('correct');
+                                        $('.answer').removeClass('incorrect');
+                                        this.question = response.data ? response.data : []
+                                    })
+                                }, 1000);
+                        } else {
+                            $('[data-number="' + index + '"]').addClass("incorrect");  
+                            setTimeout(function() {
+                                $('.answer').each(function() {
+                                    var attr = $(this).attr('data-correct');
+                                    if ( typeof attr !== typeof undefined && attr !== false) {
+                                        $(this).addClass('correct');
+                                    } else {
+                                        $(this).addClass('incorrect');
+                                    }
+                                })
+                                setTimeout(function() {
+                                    that.$http.get('/question').then(function(response) {
+                                        $('.answer').removeClass('correct');
+                                        $('.answer').removeClass('incorrect');
+                                        this.question = response.data ? response.data : []
+                                    })
+                                }, 3000);
+                            }, 1000);
+                        }
+                    },
+                    createPerson: function() {
+                        if (!$.trim(this.newPerson.name)) {
+                            this.newPerson = {}
+                            return
+                        }
+
+             // Post the new task to the /tasks route using the $http client
+                        this.$http.put('/persons', this.newPerson).success(function(response) {
+                            this.newPerson.id = response.created
+                            this.persons.push(this.newPerson)
+                            console.log("Person created!")
+                            console.log(this.newPerson)
+                            this.newPerson = {}
+                        }).error(function(error) {
+                            console.log(error)
+                        });
+                    }
+                }
+            })
+        </script> 
     </body>
 </html>
