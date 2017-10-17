@@ -27,7 +27,7 @@ func GetQuestion(db *sql.DB) Question {
 	if randGenerator.Intn(100) > 50 {
 		return GetPersonQuestion(db)
 	} else {
-		return GetPersonQuestion(db)
+		return GetAttributeQuestion(db)
 	}
 }
 func GetPersonQuestion(db *sql.DB) Question {
@@ -77,6 +77,75 @@ func GetPersonQuestion(db *sql.DB) Question {
 
 	// Now get three incorrect answers
 	sql = "SELECT info FROM attributes WHERE person_id != ? ORDER BY RANDOM() LIMIT 3"
+	rows, err = db.Query(sql, id)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		answer := Answer{}
+		err5 := rows.Scan(&answer.Text)
+		if err5 != nil {
+			panic(err5)
+		}
+
+		answer.Correct = false
+		question.Answers = append(question.Answers, answer)
+	}
+	Shuffle(question.Answers)
+	return question
+}
+
+func GetAttributeQuestion(db *sql.DB) Question {
+
+	// First get the question text
+	sql := "SELECT person_id, info FROM attributes ORDER BY RANDOM() LIMIT 1"
+	rows, err := db.Query(sql)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer rows.Close()
+
+	question := Question{}
+	id := 0
+	text := ""
+	for rows.Next() {
+
+		err2 := rows.Scan(&id, &text)
+		if err2 != nil {
+			panic(err2)
+		}
+		question.Enquiry = "Vem " + text + "?"
+	}
+
+	// Now get the correct alternative
+
+	sql = "SELECT name FROM persons WHERE ID = ? ORDER BY RANDOM() LIMIT 1"
+	rows, err3 := db.Query(sql, id)
+
+	if err3 != nil {
+		panic(err3)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		answer := Answer{}
+		err4 := rows.Scan(&answer.Text)
+		if err4 != nil {
+			panic(err4)
+		}
+		answer.Correct = true
+		question.Answers = append(question.Answers, answer)
+	}
+
+	// Now get three incorrect answers
+	sql = "SELECT name FROM persons WHERE ID != ? ORDER BY RANDOM() LIMIT 3"
 	rows, err = db.Query(sql, id)
 
 	if err != nil {
