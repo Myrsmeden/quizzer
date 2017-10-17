@@ -8,24 +8,30 @@ import (
 )
 
 func main() {
-
+	// Create database object
 	db := initDB("storage.db")
 	migrate(db)
 
 	// Create a new instance of Echo
-
 	e := echo.New()
 
+	// Create all routes
+
+	// Static routes for main page and manage page
 	e.File("/", "public/index.html")
 	e.File("/manage", "public/manage.html")
+
+	// Routes for persons
 	e.GET("/persons", handlers.GetPersons(db))
 	e.PUT("/persons", handlers.PutPerson(db))
 	e.DELETE("/persons/:id", handlers.DeletePerson(db))
 
+	// Routes for attributes
 	e.GET("/attributes", handlers.GetAttributes(db))
 	e.PUT("/attributes", handlers.PutAttribute(db))
 	e.DELETE("/attributes/:id", handlers.DeleteAttribute(db))
 
+	// Routes for question
 	e.GET("/question", handlers.GetQuestion(db))
 
 	// Start as a web server

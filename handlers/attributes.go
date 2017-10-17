@@ -1,3 +1,7 @@
+/**
+ * This file handles endpoints for attributes
+ */
+
 package handlers
 
 import (

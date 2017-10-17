@@ -1,3 +1,6 @@
+/**
+ * This file handles endpoints for questions
+ */
 package handlers
 
 import (

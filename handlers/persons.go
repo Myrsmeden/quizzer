@@ -1,3 +1,6 @@
+/**
+ * This file handles endpoints for persons
+ */
 package handlers
 
 import (
