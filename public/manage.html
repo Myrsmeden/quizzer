@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+        <title>Hantera Quiz</title>
+
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+        <!-- JQuery -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+        <!-- Vue.js -->
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/vue/1.0.24/vue.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-resource/0.7.0/vue-resource.min.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h2>Personer</h2>
+                    <ul class="list-group">
+                        <li class="list-group-item" v-for="person in persons">
+                            {{ person.name }}
+                            {{ person.nationality }}
+                            {{ person.lived }}
+                            {{ person.city }}
+                            <span class="pull-right">
+                                <button class="btn btn-xs btn-danger" v-on:click="deletePerson($index)">
+                                    <i class="fa fa-trash-o" aria-hidden="true"></i>
+                                </button>
+                            </span>
+                        </li>
+                    </ul>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Namn" v-model="newPerson.name">
+                        <input type="text" class="form-control" placeholder="Nationalitet" v-model="newPerson.nationality">
+                        <input type="text" class="form-control" placeholder="Levnadstid" v-model="newPerson.lived">
+                        <input type="text" class="form-control" placeholder="Stad" v-model="newPerson.city">
+                        <button class="btn btn-primary" type="button" v-on:click="createPerson">Lägg till person</button>
+                    </div><!-- /input-group -->
+                </div>
+                <div class="col-md-6">
+                    <h2>Egenskaper</h2>
+                    <ul class="list-group">
+                        <li class="list-group-item" v-for="attribute in attributes">
+                            {{ attribute.person }}
+                            {{ attribute.info }}
+                            <span class="pull-right">
+                                <button class="btn btn-xs btn-danger" v-on:click="deleteAttribute($index)">
+                                    <i class="fa fa-trash-o" aria-hidden="true"></i>
+                                </button>
+                            </span>
+                        </li>
+                    </ul>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Info" v-model="newAttribute.info">
+                        <div v-for="person in persons">
+                            <input type="radio" v-model="newAttribute.person_id" value="{{person.id}}" /> {{person.name}}
+                        </div>
+                        <button class="btn btn-primary" type="button" v-on:click="createAttribute">Lägg till egenskap</button>
+                    </div><!-- /input-group -->
+                </div>
+            </div>
+        </div>
+        <script>
+            new Vue({
+                el: 'body',
+
+                data: {
+                    persons: [],
+                    newPerson: {},
+                    attributes: [],
+                    newAttribute: {}
+                },
+
+          // This is run whenever the page is loaded to make sure we have a current task list
+                created: function() {
+        // Use the vue-resource $http client to fetch data from the /tasks route
+                    this.$http.get('/persons').then(function(response) {
+                        this.persons = response.data.items ? response.data.items : []
+                    })
+                    this.$http.get('/attributes').then(function(response) {
+                        this.attributes = response.data.items ? response.data.items : []
+                    })
+                },
+
+                methods: {
+                    createPerson: function() {
+                        if (!$.trim(this.newPerson.name)) {
+                            this.newPerson = {}
+                            return
+                        }
+
+             // Post the new task to the /tasks route using the $http client
+                        this.$http.put('/persons', this.newPerson).success(function(response) {
+                            this.newPerson.id = response.created
+                            this.persons.push(this.newPerson)
+                            console.log("Person created!")
+                            console.log(this.newPerson)
+                            this.newPerson = {}
+                        }).error(function(error) {
+                            console.log(error)
+                        });
+                    },
+
+                    deletePerson: function(index) {
+             // Use the $http client to delete a task by its id
+                        this.$http.delete('/persons/' + this.persons[index].id).success(function(response) {
+                            this.persons.splice(index, 1)
+                            console.log("Person deleted!")
+                        }).error(function(error) {
+                            console.log(error)
+                        })
+                    },
+                    createAttribute: function() {
+                        if (!$.trim(this.newAttribute.info)) {
+                            this.newAttribute = {}
+                            return
+                        }
+
+                        this.newAttribute.person_id = parseInt(this.newAttribute.person_id)
+
+             // Post the new task to the /tasks route using the $http client
+                        this.$http.put('/attributes', this.newAttribute).success(function(response) {
+                            this.newAttribute.id = response.created
+                            this.attributes.push(this.newAttribute)
+                            console.log("Attribute created!")
+                            console.log(this.newAttribute)
+                            this.newAttribute = {}
+                        }).error(function(error) {
+                            console.log(error)
+                        });
+                    },
+
+                    deleteAttribute: function(index) {
+             // Use the $http client to delete a task by its id
+                        this.$http.delete('/attributes/' + this.attributes[index].id).success(function(response) {
+                            this.attributes.splice(index, 1)
+                            console.log("Attribute deleted!")
+                        }).error(function(error) {
+                            console.log(error)
+                        })
+                    }
+                }
+            })
+        </script> 
+    </body>
+</html>
